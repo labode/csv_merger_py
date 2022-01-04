@@ -27,7 +27,7 @@ def read_csv(file_name):
         reader = csv.reader(csv_file, delimiter=';')
         for row in reader:
             # Exclude header line
-            if row[0] == 'id' and row[1] == 'inner' and row[2] == 'outer':
+            if row[0] == 'Id' and row[1] == 'Inner' and row[2] == 'Outer':
                 continue
             else:
                 identifier = int(row[0])
@@ -45,7 +45,7 @@ def read_csv(file_name):
 def write_csv(data, target_file):
     with open(target_file, 'w', newline='') as csv_file:
         data_writer = csv.writer(csv_file, delimiter=',')
-        data_writer.writerow(['id', 'inner', 'outer'])
+        data_writer.writerow(['Id', 'Inner', 'Outer'])
         for row in data:
             data_writer.writerow(row)
 
@@ -57,7 +57,7 @@ def average_measurements(data):
     size = len(data)
 
     return_data = []
-    # TODO: Check if using 0 or 1 is correct here
+
     i = 0
     # For every entry => While the next entry has the same id => combine
     while i < size:
