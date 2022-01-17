@@ -92,11 +92,13 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--directory', action='store', type=str, required=True,
                         help='Directory containing .csv files')
     parser.add_argument('-f', '--filename', action='store', type=str, required=True, help='Name of output file')
+    parser.add_argument('-a', '--average', action='store_true', required=False, help='Calculate average of values')
 
     args = parser.parse_args()
 
     directory = args.directory
     filename = args.filename
+    average = args.average
 
     file_list = list_dir(directory, '.csv')
 
@@ -108,7 +110,9 @@ if __name__ == '__main__':
             dataset.append(entry_row)
 
     print(str(len(dataset)) + ' datasets read')
-    dataset = average_measurements(dataset)
-    print(str(len(dataset)) + ' averaged datasets created')
+
+    if average:
+        dataset = average_measurements(dataset)
+        print(str(len(dataset)) + ' averaged datasets created')
 
     write_csv(dataset, filename + '.csv')
