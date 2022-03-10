@@ -27,7 +27,7 @@ def read_csv(file_name):
         reader = csv.reader(csv_file, delimiter=';')
         for row in reader:
             # Exclude header line
-            if row[0] == 'Id' and row[1] == 'Inner' and row[2] == 'Outer':
+            if row[0] == 'Id' and row[1] == 'Inner' and row[2] == 'Media' and row[3] == 'Outer':
                 continue
             else:
                 identifier = int(row[0])
@@ -36,8 +36,10 @@ def read_csv(file_name):
                 value_1 = float(value_1)
                 value_2 = row[2].replace(',', '.')
                 value_2 = float(value_2)
+                value_3 = row[3].replace(',', '.')
+                value_3 = float(value_3)
 
-                data.append([identifier, value_1, value_2])
+                data.append([identifier, value_1, value_2, value_3])
 
     return data
 
@@ -45,7 +47,7 @@ def read_csv(file_name):
 def write_csv(data, target_file):
     with open(target_file, 'w', newline='') as csv_file:
         data_writer = csv.writer(csv_file, delimiter=',')
-        data_writer.writerow(['Id', 'Inner', 'Outer'])
+        data_writer.writerow(['Id', 'Inner', 'Media', 'Outer'])
         for row in data:
             data_writer.writerow(row)
 
@@ -68,16 +70,18 @@ def average_measurements(data):
         else:
             if data[i][0] == data[i+1][0]:
                 j = 1
-                comb = [data[i][0], data[i][1], data[i][2]]
+                comb = [data[i][0], data[i][1], data[i][2], data[i][3]]
                 while data[i][0] == data[i+1][0]:
-                    comb[1] += data[i+1][1]
+                    comb[1] += data[i + 1][1]
                     comb[2] += data[i + 1][2]
+                    comb[3] += data[i + 1][3]
                     j += 1
                     i += 1
                     if i == size - 1:
                         break
                 comb[1] = round(comb[1] / j, 3)
                 comb[2] = round(comb[2] / j, 3)
+                comb[3] = round(comb[3] / j, 3)
                 return_data.append(comb)
                 i += 1
             else:
