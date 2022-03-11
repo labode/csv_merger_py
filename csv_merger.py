@@ -35,6 +35,9 @@ def read_csv(file_name):
                 value_1 = row[1].replace(',', '.')
                 value_1 = float(value_1)
                 value_2 = row[2].replace(',', '.')
+                # If we have no value for row2, there is no externa, so media diameter = outer diameter
+                if value_2 == '':
+                    value_2 = row[3].replace(',', '.')
                 value_2 = float(value_2)
                 value_3 = row[3].replace(',', '.')
                 value_3 = float(value_3)
