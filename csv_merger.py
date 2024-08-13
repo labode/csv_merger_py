@@ -19,6 +19,14 @@ def list_dir(path, filetype=''):
         return data
 
 
+def get_header(file_name):
+    with open(file_name) as csv_file:
+        reader = csv.reader(csv_file, delimiter=';')
+        first_line = next(reader)
+
+    return first_line
+
+
 def read_csv(file_name):
     data = []
 
@@ -108,6 +116,8 @@ if __name__ == '__main__':
     average = args.average
 
     file_list = list_dir(directory, '.csv')
+
+    header = get_header(file_list[0])
 
     dataset = []
 
