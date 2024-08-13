@@ -31,26 +31,29 @@ def read_csv(file_name):
     data = []
 
     with open(file_name) as csv_file:
-        # TODO: Possible extension => Let user supply delimiter (and header yes/no)
+        # TODO: Possible extension => Let user supply delimiter
         reader = csv.reader(csv_file, delimiter=';')
+        # TODO: Skip this step for no_header option
+        next(reader, None)
         for row in reader:
-            # Exclude header line
-            if row[0] == 'Id' and row[1] == 'Inner' and row[2] == 'Media' and row[3] == 'Outer':
-                continue
-            else:
-                identifier = int(row[0])
-                # Convert decimal values from german to english format
-                value_1 = row[1].replace(',', '.')
-                value_1 = float(value_1)
-                value_2 = row[2].replace(',', '.')
-                # If we have no value for row2, there is no externa, so media diameter = outer diameter
-                if value_2 == '':
-                    value_2 = row[3].replace(',', '.')
-                value_2 = float(value_2)
-                value_3 = row[3].replace(',', '.')
-                value_3 = float(value_3)
+            i = 0
+            line = []
+            for entry in row:
+                # The first value is the (numerical!) identifier (id)
+                if i == 0:
+                    line.append(int(entry))
+                # All following values are measurements
+                else:
+                    if entry == '':
+                        value = 0
+                    else:
+                        value = entry.replace(',', '.')
+                        value = float(value)
+                    line.append(value)
 
-                data.append([identifier, value_1, value_2, value_3])
+                i += 1
+
+            data.append(line)
 
     return data
 
@@ -81,18 +84,22 @@ def average_measurements(data):
         else:
             if data[i][0] == data[i+1][0]:
                 j = 1
-                comb = [data[i][0], data[i][1], data[i][2], data[i][3]]
+                comb = data[i]
                 while data[i][0] == data[i+1][0]:
-                    comb[1] += data[i + 1][1]
-                    comb[2] += data[i + 1][2]
-                    comb[3] += data[i + 1][3]
+                    k = 1
+                    while k < len(data[i]):
+                        comb[k] += data[i + 1][k]
+                        k += 1
                     j += 1
                     i += 1
                     if i == size - 1:
                         break
-                comb[1] = round(comb[1] / j, 3)
-                comb[2] = round(comb[2] / j, 3)
-                comb[3] = round(comb[3] / j, 3)
+
+                k = 1
+                while k < len(comb):
+                    comb[k] = round(comb[k] / j, 3)
+                    k += 1
+
                 return_data.append(comb)
                 i += 1
             else:
@@ -103,12 +110,22 @@ def average_measurements(data):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Merge all csv files from a directory')
+    parser = argparse.ArgumentParser(description='Merge all csv files from a directory into a single file. '
+                                                 'This program expects the .csv files to contain a header line and '
+                                                 'each following line to start with a numerical (int) identifier and '
+                                                 'an arbitrary number of numerical values (int or float, will be '
+                                                 'converted to float). Empty fields will be converted to 0. '
+                                                 'Right now the german format is expected, i.e. '
+                                                 'values delimited by a ; and , as a decimal separator. The output '
+                                                 'will be a single file in standard .csv format with , as delimiter '
+                                                 'and . as decimal separator.')
     parser.add_argument('directory', action='store', type=str, help='Directory containing .csv files')
     parser.add_argument('-f', '--filename', action='store', type=str, required=False, default='merged',
                         help='Name of output file')
-    parser.add_argument('-a', '--average', action='store_true', required=False, help='Calculate average of values')
+    parser.add_argument('-a', '--average', action='store_true', required=False, help='Calculate average '
+                                                                                     'values per identifier')
     # TODO: Add no_header option?
+    # TODO: Allow standard .csv format (delimiter = , and decimal separator = .)
 
     args = parser.parse_args()
 
