@@ -96,8 +96,7 @@ def average_measurements(data):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Merge all csv files from a directory')
-    parser.add_argument('-d', '--directory', action='store', type=str, required=True,
-                        help='Directory containing .csv files')
+    parser.add_argument('directory', action='store', type=str, help='Directory containing .csv files')
     parser.add_argument('-f', '--filename', action='store', type=str, required=True, help='Name of output file')
     parser.add_argument('-a', '--average', action='store_true', required=False, help='Calculate average of values')
 
