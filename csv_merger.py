@@ -19,33 +19,53 @@ def list_dir(path, filetype=''):
         return data
 
 
-def read_csv(file_name):
+def get_header(file_name, value_separator):
+    with open(file_name) as csv_file:
+        reader = csv.reader(csv_file, delimiter=value_separator)
+        first_line = next(reader)
+
+    return first_line
+
+
+def read_csv(file_name, value_separator, decimal_separator, skip_header=True):
     data = []
 
     with open(file_name) as csv_file:
-        # TODO: Possible extension => Let user supply delimiter (and header yes/no)
-        reader = csv.reader(csv_file, delimiter=';')
-        for row in reader:
-            # Exclude header line
-            if row[0] == 'Id' and row[1] == 'Inner' and row[2] == 'Outer':
-                continue
-            else:
-                identifier = int(row[0])
-                # Convert decimal values from german to english format
-                value_1 = row[1].replace(',', '.')
-                value_1 = float(value_1)
-                value_2 = row[2].replace(',', '.')
-                value_2 = float(value_2)
+        reader = csv.reader(csv_file, delimiter=value_separator)
 
-                data.append([identifier, value_1, value_2])
+        if skip_header:
+            next(reader, None)
+        for row in reader:
+            i = 0
+            line = []
+            for entry in row:
+                # The first value is the (numerical!) identifier (id)
+                if i == 0:
+                    line.append(int(entry))
+                # All following values are measurements
+                else:
+                    if entry == '':
+                        value = 0
+                    else:
+                        if decimal_separator != '.':
+                            value = entry.replace(decimal_separator, '.')
+                        else:
+                            value = entry
+                        value = float(value)
+                    line.append(value)
+
+                i += 1
+
+            data.append(line)
 
     return data
 
 
-def write_csv(data, target_file):
+def write_csv(data, target_file, first_row):
     with open(target_file, 'w', newline='') as csv_file:
         data_writer = csv.writer(csv_file, delimiter=',')
-        data_writer.writerow(['Id', 'Inner', 'Outer'])
+        if first_row:
+            data_writer.writerow(first_row)
         for row in data:
             data_writer.writerow(row)
 
@@ -68,16 +88,22 @@ def average_measurements(data):
         else:
             if data[i][0] == data[i+1][0]:
                 j = 1
-                comb = [data[i][0], data[i][1], data[i][2]]
+                comb = data[i]
                 while data[i][0] == data[i+1][0]:
-                    comb[1] += data[i+1][1]
-                    comb[2] += data[i + 1][2]
+                    k = 1
+                    while k < len(data[i]):
+                        comb[k] += data[i + 1][k]
+                        k += 1
                     j += 1
                     i += 1
                     if i == size - 1:
                         break
-                comb[1] = round(comb[1] / j, 3)
-                comb[2] = round(comb[2] / j, 3)
+
+                k = 1
+                while k < len(comb):
+                    comb[k] = round(comb[k] / j, 3)
+                    k += 1
+
                 return_data.append(comb)
                 i += 1
             else:
@@ -88,24 +114,57 @@ def average_measurements(data):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Merge all csv files from a directory')
-    parser.add_argument('-d', '--directory', action='store', type=str, required=True,
-                        help='Directory containing .csv files')
-    parser.add_argument('-f', '--filename', action='store', type=str, required=True, help='Name of output file')
-    parser.add_argument('-a', '--average', action='store_true', required=False, help='Calculate average of values')
+    parser = argparse.ArgumentParser(description='Merge all csv files from a directory into a single file. '
+                                                 'This program expects the .csv files to contain a header line and '
+                                                 'each following line to start with a numerical (int) identifier and '
+                                                 'an arbitrary number of numerical values (int or float, will be '
+                                                 'converted to float). Empty fields will be converted to 0. '
+                                                 'The european format is expected, i.e. values delimited by a ; and , '
+                                                 'as a decimal separator. This can be switched using the '
+                                                 '--standard_format option. The output will be a single file in '
+                                                 'standard .csv format with , as delimiter and . as decimal separator.')
+    parser.add_argument('directory', action='store', type=str, help='Directory containing .csv files')
+    parser.add_argument('-f', '--filename', action='store', type=str, required=False, default='merged',
+                        help='Name of output file')
+    parser.add_argument('-a', '--average', action='store_true', required=False, help='Calculate average '
+                                                                                     'values per identifier')
+    parser.add_argument('--no_header', action='store_true', default=False, required=False,
+                        help='Set this option if your files do not contain a header line')
+    parser.add_argument('--standard_format', action='store_true', default=False, required=False,
+                        help='Set this flag to switch from european .csv format (delimiter = ; and decimal '
+                             'separator = ,) to standard format (delimiter = , and decimal separator = .)')
 
     args = parser.parse_args()
 
     directory = args.directory
     filename = args.filename
     average = args.average
+    no_header = args.no_header
+    standard_format = args.standard_format
+
+    # This list might be expanded or replaced by completely user provided values
+    if standard_format:
+        delimiter = ','
+        decimal = '.'
+    else:
+        delimiter = ';'
+        decimal = ','
 
     file_list = list_dir(directory, '.csv')
+
+    if no_header:
+        # Placeholder, so the variable exists
+        header = None
+    else:
+        header = get_header(file_list[0], delimiter)
 
     dataset = []
 
     for file_entry in file_list:
-        file_data = read_csv(file_entry)
+        if no_header:
+            file_data = read_csv(file_entry, delimiter, decimal, False)
+        else:
+            file_data = read_csv(file_entry, delimiter, decimal)
         for entry_row in file_data:
             dataset.append(entry_row)
 
@@ -115,4 +174,4 @@ if __name__ == '__main__':
         dataset = average_measurements(dataset)
         print(str(len(dataset)) + ' averaged datasets created')
 
-    write_csv(dataset, filename + '.csv')
+    write_csv(dataset, filename + '.csv', header)
