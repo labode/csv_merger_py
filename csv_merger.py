@@ -125,7 +125,7 @@ if __name__ == '__main__':
                                                  'standard .csv format with , as delimiter and . as decimal separator.')
     parser.add_argument('directory', action='store', type=str, help='Directory containing .csv files')
     parser.add_argument('-f', '--filename', action='store', type=str, required=False, default='merged',
-                        help='Name of output file')
+                        help='Name of output file, default value = merged.csv')
     parser.add_argument('-a', '--average', action='store_true', required=False, help='Calculate average '
                                                                                      'values per identifier')
     parser.add_argument('--no_header', action='store_true', default=False, required=False,
