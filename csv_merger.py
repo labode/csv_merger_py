@@ -55,10 +55,10 @@ def read_csv(file_name):
     return data
 
 
-def write_csv(data, target_file):
+def write_csv(data, first_row, target_file):
     with open(target_file, 'w', newline='') as csv_file:
         data_writer = csv.writer(csv_file, delimiter=',')
-        data_writer.writerow(['Id', 'Inner', 'Media', 'Outer'])
+        data_writer.writerow(first_row)
         for row in data:
             data_writer.writerow(row)
 
@@ -108,6 +108,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--filename', action='store', type=str, required=False, default='merged',
                         help='Name of output file')
     parser.add_argument('-a', '--average', action='store_true', required=False, help='Calculate average of values')
+    # TODO: Add no_header option?
 
     args = parser.parse_args()
 
@@ -132,4 +133,4 @@ if __name__ == '__main__':
         dataset = average_measurements(dataset)
         print(str(len(dataset)) + ' averaged datasets created')
 
-    write_csv(dataset, filename + '.csv')
+    write_csv(dataset, header, filename + '.csv')
