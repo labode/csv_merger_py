@@ -27,14 +27,15 @@ def get_header(file_name):
     return first_line
 
 
-def read_csv(file_name):
+def read_csv(file_name, skip_header=True):
     data = []
 
     with open(file_name) as csv_file:
         # TODO: Possible extension => Let user supply delimiter
         reader = csv.reader(csv_file, delimiter=';')
-        # TODO: Skip this step for no_header option
-        next(reader, None)
+
+        if skip_header:
+            next(reader, None)
         for row in reader:
             i = 0
             line = []
@@ -58,10 +59,11 @@ def read_csv(file_name):
     return data
 
 
-def write_csv(data, first_row, target_file):
+def write_csv(data, target_file, first_row):
     with open(target_file, 'w', newline='') as csv_file:
         data_writer = csv.writer(csv_file, delimiter=',')
-        data_writer.writerow(first_row)
+        if first_row:
+            data_writer.writerow(first_row)
         for row in data:
             data_writer.writerow(row)
 
@@ -124,7 +126,10 @@ if __name__ == '__main__':
                         help='Name of output file')
     parser.add_argument('-a', '--average', action='store_true', required=False, help='Calculate average '
                                                                                      'values per identifier')
-    # TODO: Add no_header option?
+    parser.add_argument('--no_header', action='store_true', default=False, required=False, help='Set this '
+                                                                                                'option if your files '
+                                                                                                'do not contain a '
+                                                                                                'header line')
     # TODO: Allow standard .csv format (delimiter = , and decimal separator = .)
 
     args = parser.parse_args()
@@ -132,15 +137,23 @@ if __name__ == '__main__':
     directory = args.directory
     filename = args.filename
     average = args.average
+    no_header = args.no_header
 
     file_list = list_dir(directory, '.csv')
 
-    header = get_header(file_list[0])
+    if no_header:
+        # Placeholder, so the variable exists
+        header = None
+    else:
+        header = get_header(file_list[0])
 
     dataset = []
 
     for file_entry in file_list:
-        file_data = read_csv(file_entry)
+        if no_header:
+            file_data = read_csv(file_entry, False)
+        else:
+            file_data = read_csv(file_entry)
         for entry_row in file_data:
             dataset.append(entry_row)
 
@@ -150,4 +163,4 @@ if __name__ == '__main__':
         dataset = average_measurements(dataset)
         print(str(len(dataset)) + ' averaged datasets created')
 
-    write_csv(dataset, header, filename + '.csv')
+    write_csv(dataset, filename + '.csv', header)
